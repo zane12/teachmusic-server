@@ -1,0 +1,78 @@
+const mongoose = require("mongoose");
+const validator = require("validator");
+const jwt = require("jsonwebtoken");
+
+const teacherSchema = mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  bio: {
+    type: String,
+    default: "",
+  },
+  //   subjects: {},
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    lowercase: true,
+    validate(value) {
+      if (!validator.isEmail(value)) {
+        throw new Error("not a valid email address");
+      }
+    },
+  },
+  password: {
+    type: String,
+    required: true,
+    trim: true,
+    minlength: 7,
+    validate(value) {
+      if (value === value.toLowerCase() || value === value.toUpperCase())
+        throw new Error("password must include both upper and lower case");
+    },
+  },
+  tokens: [
+    {
+      token: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
+
+  //   phone: {},
+  //   rate: {},
+  //   photo: {},
+  //   payment: {},
+});
+
+teacherSchema.methods.generateAuthToken = async function () {
+  const teacher = this;
+
+  const token = jwt.sign(
+    { _id: teacher._id.toString() },
+    process.env.JWT_SECRET
+  );
+
+  teacher.tokens = teacher.tokens.concat({ token });
+  await teacher.save();
+  return token;
+};
+
+teacherSchema.methods.toJSON = function () {
+  const teacher = this;
+  const teacherObject = teacher.toObject();
+
+  delete teacherObject.password;
+  delete teacherObject.tokens;
+
+  return teacherObject;
+};
+
+const Teacher = mongoose.model("Teacher", teacherSchema);
+
+module.exports = Teacher;
