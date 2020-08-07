@@ -35,6 +35,9 @@ const teacherSchema = mongoose.Schema({
         throw new Error("password must include both upper and lower case");
     },
   },
+  calendarAuthCode: {
+    type: String,
+  },
   tokens: [
     {
       token: {

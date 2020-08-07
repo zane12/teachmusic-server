@@ -1,9 +1,7 @@
 const express = require("express");
 require("./db/mongoose");
 const cors = require("cors");
-const jwt = require("jsonwebtoken");
 const auth = require("./middleware/auth");
-const cron = require("node-cron");
 const calendarAuth = require("./calendar/calendarAuthv2");
 
 const Teacher = require("./models/Teacher");
@@ -14,9 +12,16 @@ const app = express();
 const port = process.env.PORT || 8080;
 
 app.use(express.json());
-app.use(cors());
 
-app.get("/", express.static("public"));
+app.get("/auth", async (req, res) => {
+  try {
+    const calendarAuthCode = req.query.code;
+
+    res.redirect("http://10.0.0.38:3000?code=" + calendarAuthCode);
+  } catch (e) {
+    res.status(500).send(e);
+  }
+});
 
 app.listen(port, () => {
   console.log("Server is up on port: " + port);
@@ -26,8 +31,9 @@ app.post("/teacher", async (req, res) => {
   try {
     const teacher = new Teacher(req.body);
     await teacher.save();
+    const token = teacher.generateAuthToken();
 
-    res.status(201).send({ calendarAuth: calendarAuth });
+    res.status(201).send(JSON.stringify({ calendarAuth, teacher, token }));
   } catch (e) {
     res.status(500).send(e);
   }
@@ -57,6 +63,12 @@ app.post("/teacher/login", async (req, res) => {
 
     if (teacher === undefined || teacher.length === 0) {
       throw new Error("email/password combination not found");
+    }
+
+    if (req.body.calendarAuthCode) {
+      await Teacher.findByIdAndUpdate(teacher._id, {
+        calendarAuthCode: req.body.calendarAuthCode,
+      });
     }
 
     token = await teacher.generateAuthToken();
