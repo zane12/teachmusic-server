@@ -32,6 +32,10 @@ const studentSchema = mongoose.Schema({
       min: 0,
       max: 59,
     },
+    firstLesson: {
+      type: Date,
+      required: true,
+    },
   },
 
   email: {

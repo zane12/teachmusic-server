@@ -1,8 +1,12 @@
 const express = require("express");
 require("./db/mongoose");
-const cors = require("cors");
+
 const auth = require("./middleware/auth");
-const calendarAuth = require("./calendar/calendarAuthv2");
+const {
+  calendarAuthURL,
+  authorizeCalendar,
+} = require("./calendar/calendarAuth");
+const { scheduleMonth } = require("./calendar/utils/scheduleV2");
 
 const Teacher = require("./models/Teacher");
 const Student = require("./models/Student");
@@ -12,16 +16,6 @@ const app = express();
 const port = process.env.PORT || 8080;
 
 app.use(express.json());
-
-app.get("/auth", async (req, res) => {
-  try {
-    const calendarAuthCode = req.query.code;
-
-    res.redirect("http://10.0.0.38:3000?code=" + calendarAuthCode);
-  } catch (e) {
-    res.status(500).send(e);
-  }
-});
 
 app.listen(port, () => {
   console.log("Server is up on port: " + port);
@@ -33,7 +27,7 @@ app.post("/teacher", async (req, res) => {
     await teacher.save();
     const token = teacher.generateAuthToken();
 
-    res.status(201).send(JSON.stringify({ calendarAuth, teacher, token }));
+    res.status(201).send(JSON.stringify({ calendarAuthURL, teacher, token }));
   } catch (e) {
     res.status(500).send(e);
   }
@@ -71,7 +65,7 @@ app.post("/teacher/login", async (req, res) => {
       });
     }
 
-    token = await teacher.generateAuthToken();
+    const token = await teacher.generateAuthToken();
 
     res.send({ teacher, token });
   } catch (e) {
@@ -79,11 +73,13 @@ app.post("/teacher/login", async (req, res) => {
   }
 });
 
-app.post("/student", async (req, res) => {
+app.post("/student", auth, async (req, res) => {
   try {
     const student = new Student(req.body);
 
-    await student.save();
+    const newStudent = await student.save();
+
+    authorizeCalendar(req.teacher, newStudent, scheduleMonth);
 
     res.status(201).send();
   } catch (e) {
@@ -166,6 +162,16 @@ app.get("/lessons:id", async (req, res) => {
     res.send(lesson);
   } catch (e) {
     res.status(500).send();
+  }
+});
+
+app.get("/oauth", async (req, res) => {
+  try {
+    const calendarAuthCode = req.query.code;
+
+    res.redirect("http://localhost:3000?code=" + calendarAuthCode);
+  } catch (e) {
+    res.status(500).send(e);
   }
 });
 

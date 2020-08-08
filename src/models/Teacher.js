@@ -38,6 +38,10 @@ const teacherSchema = mongoose.Schema({
   calendarAuthCode: {
     type: String,
   },
+  calendarToken: {
+    type: String,
+  },
+
   tokens: [
     {
       token: {
@@ -72,6 +76,8 @@ teacherSchema.methods.toJSON = function () {
 
   delete teacherObject.password;
   delete teacherObject.tokens;
+  delete teacherObject.calendarAuthCode;
+  delete teacherObject.calendarToken;
 
   return teacherObject;
 };
