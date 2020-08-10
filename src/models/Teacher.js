@@ -35,6 +35,7 @@ const teacherSchema = mongoose.Schema({
         throw new Error("password must include both upper and lower case");
     },
   },
+
   calendarAuthCode: {
     type: String,
   },
@@ -57,6 +58,12 @@ const teacherSchema = mongoose.Schema({
   //   payment: {},
 });
 
+teacherSchema.virtual("students", {
+  ref: "Student",
+  localField: "_id",
+  foreignField: "teacherId",
+});
+
 teacherSchema.methods.generateAuthToken = async function () {
   const teacher = this;
 
@@ -74,6 +81,7 @@ teacherSchema.methods.toJSON = function () {
   const teacher = this;
   const teacherObject = teacher.toObject();
 
+  delete teacherObject.students;
   delete teacherObject.password;
   delete teacherObject.tokens;
   delete teacherObject.calendarAuthCode;

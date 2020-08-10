@@ -59,6 +59,11 @@ const studentSchema = mongoose.Schema({
       }
     },
   },
+
+  teacherId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+  },
 });
 
 studentSchema.virtual("lessons", {

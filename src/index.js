@@ -75,7 +75,7 @@ app.post("/teacher/login", async (req, res) => {
 
 app.post("/student", auth, async (req, res) => {
   try {
-    const student = new Student(req.body);
+    const student = new Student({ ...req.body, teacherId: req.teacher._id });
 
     const newStudent = await student.save();
 
@@ -87,11 +87,13 @@ app.post("/student", auth, async (req, res) => {
   }
 });
 
-app.get("/student", async (req, res) => {
+app.get("/student", auth, async (req, res) => {
   try {
-    const students = await Student.find({});
+    const teacher = await req.teacher
+      .populate({ path: "students" })
+      .execPopulate();
 
-    res.send(students);
+    res.send(teacher.students);
   } catch (e) {
     res.status(500).send();
   }
@@ -137,6 +139,12 @@ app.patch("/student/:id", auth, async (req, res) => {
     if (allowed) {
       if (!student) res.status(404).send();
 
+      //Check if lesson time has been updated and update calendar
+      if (body.lessonTime) {
+        console.log(
+          "send " + body.lessonTime.toString() + " to calendarUpdateFunction"
+        );
+      }
       res.status(200).send();
     } else res.status(400).send();
   } catch (e) {

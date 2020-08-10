@@ -50,6 +50,7 @@ async function scheduleMonth(student, auth) {
         email: student.email,
       },
     ],
+    sendUpdates: "none",
   };
 
   const calendar = google.calendar({ version: "v3", auth });
@@ -63,7 +64,7 @@ async function scheduleMonth(student, auth) {
       if (err) {
         return console.log("Error contacting Google Calendar: " + err);
       }
-      console.log("Event created: " + JSON.stringify(event));
+      console.log("Event created: " + event.data.htmlLink);
     }
   );
 }
