@@ -59,10 +59,19 @@ const studentSchema = mongoose.Schema({
       }
     },
   },
+  stopped: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
 
   teacherId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
+  },
+
+  recurringEventId: {
+    type: String,
   },
 });
 

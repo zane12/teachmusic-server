@@ -43,6 +43,7 @@ const authorizeCalendar = async (teacher, student, callback) => {
   }
 
   oAuth2Client.setCredentials(JSON.parse(teacher.calendarToken));
+
   callback(student, oAuth2Client);
 };
 

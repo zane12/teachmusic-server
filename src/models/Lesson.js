@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const Lesson = mongoose.model("Lesson", {
   lessonDate: {
-    type: Date,
+    type: String,
     required: true,
   },
   taught: {
@@ -13,6 +13,10 @@ const Lesson = mongoose.model("Lesson", {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
     ref: "Student",
+  },
+  calendarId: {
+    type: String,
+    required: true,
   },
 });
 
