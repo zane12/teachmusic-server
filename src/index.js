@@ -10,7 +10,7 @@ const {
   scheduleMonth,
   modifyLessons,
   stopLessons,
-  addLessons,
+  getCalendarName,
 } = require("./calendar/utils/scheduleV2");
 
 const Teacher = require("./models/Teacher");
@@ -33,6 +33,24 @@ app.post("/teacher", async (req, res) => {
     const token = teacher.generateAuthToken();
 
     res.status(201).send(JSON.stringify({ calendarAuthURL, teacher, token }));
+  } catch (e) {
+    res.status(500).send(e);
+  }
+});
+
+app.get("/teacher/:id/calendar", auth, async (req, res) => {
+  try {
+    const teacher = await Teacher.findById(req.params.id);
+
+    if (!teacher) res.status(404).send();
+
+    const calendarName = await authorizeCalendar(
+      teacher,
+      null,
+      getCalendarName
+    );
+
+    res.send(JSON.stringify({ calendarName }));
   } catch (e) {
     res.status(500).send(e);
   }
@@ -172,7 +190,9 @@ app.patch("/student/:id", auth, async (req, res) => {
         authorizeCalendar(req.teacher, current, modifyLessons);
       }
 
-      const student = await Student.findByIdAndUpdate(_id, body);
+      const student = await Student.findByIdAndUpdate(_id, body, {
+        runValidators: true,
+      });
       if (!student) res.status(404).send();
 
       res.status(200).send();
@@ -182,9 +202,10 @@ app.patch("/student/:id", auth, async (req, res) => {
   }
 });
 
-app.get("/lessons", async (req, res) => {
+app.get("/lessons", auth, async (req, res) => {
   try {
-    const lessons = await Lesson.find({});
+    const lessons = JSON.stringify({ lesson: "testlessonstring" });
+    // const lessons = await Lesson.find({});
     res.send(lessons);
   } catch (e) {
     res.status(500).send();

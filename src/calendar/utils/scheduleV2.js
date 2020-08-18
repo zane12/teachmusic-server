@@ -39,6 +39,7 @@ async function removeLessons(student, auth) {
       console.log(e);
     });
   const instances = response.data.items;
+
   //instances contains each events google calendar data
   if (instances.length > 0) {
     instances.forEach(async (event) => {
@@ -273,14 +274,14 @@ const stopLessons = async (student, auth) => {
   //student comes in as an object with endLessonTime attached
   const endMoment = moment(student.endLessonTime.firstLesson);
   removeLessons(student, auth);
-  const calendar = google.calendar({ version: "v3", auth });
 
-  const endRecurrence =
-    moment(endMoment).format("YYYYMMDD") +
-    "T" +
-    moment(endMoment).format("HHmmss") +
-    "Z";
-  //20110701T170000Z <-- formatted for Google Calendar api v3 recurrence
+  let rescheduleCheck = true;
+
+  if (endMoment.isSameOrBefore(moment(student.lessonTime.firstLesson))) {
+    rescheduleCheck = false;
+  }
+
+  const calendar = google.calendar({ version: "v3", auth });
 
   const oldLesson = await calendar.events.get({
     auth,
@@ -288,18 +289,41 @@ const stopLessons = async (student, auth) => {
     eventId: student.recurringEventId,
   });
 
-  oldLesson.data.recurrence = ["RRULE:FREQ=WEEKLY;UNTIL=" + endRecurrence];
+  if (rescheduleCheck) {
+    const endRecurrence =
+      moment(endMoment).format("YYYYMMDD") + "T" + "000000Z";
+    //20110701T170000Z <-- formatted for Google Calendar api v3 recurrence
 
-  await calendar.events
-    .update({
+    oldLesson.data.recurrence = ["RRULE:FREQ=WEEKLY;UNTIL=" + endRecurrence];
+
+    await calendar.events
+      .update({
+        auth,
+        calendarId: "primary",
+        eventId: student.recurringEventId,
+        resource: oldLesson.data,
+      })
+      .then(() => {
+        addLessons(student, auth);
+      });
+  } else {
+    await calendar.events.delete({
       auth,
       calendarId: "primary",
       eventId: student.recurringEventId,
-      resource: oldLesson.data,
-    })
-    .then(() => {
-      addLessons(student, auth);
     });
+  }
+};
+
+const getCalendarName = async (student, auth) => {
+  const calendar = google.calendar({ version: "v3", auth });
+
+  const response = await calendar.calendars.get({
+    auth,
+    calendarId: "primary",
+  });
+
+  return response.data.id;
 };
 
 module.exports = {
@@ -308,4 +332,5 @@ module.exports = {
   stopLessons,
   addLessons,
   removeLessons,
+  getCalendarName,
 };

@@ -1,7 +1,10 @@
 const { google } = require("googleapis");
 const Teacher = require("../models/Teacher");
 
-const SCOPES = ["https://www.googleapis.com/auth/calendar.events"];
+const SCOPES = [
+  "https://www.googleapis.com/auth/calendar.events",
+  "https://www.googleapis.com/auth/calendar",
+];
 
 const oAuth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENTID,
@@ -33,7 +36,7 @@ const getCalendarToken = (teacher, student, callback) => {
       }
     );
 
-    callback(student, oAuth2Client);
+    return callback(student, oAuth2Client);
   });
 };
 
@@ -44,7 +47,7 @@ const authorizeCalendar = async (teacher, student, callback) => {
 
   oAuth2Client.setCredentials(JSON.parse(teacher.calendarToken));
 
-  callback(student, oAuth2Client);
+  return callback(student, oAuth2Client);
 };
 
 module.exports = { calendarAuthURL, authorizeCalendar };
