@@ -204,21 +204,45 @@ app.patch("/student/:id", auth, async (req, res) => {
 
 app.get("/lessons", auth, async (req, res) => {
   try {
-    const lessons = JSON.stringify({ lesson: "testlessonstring" });
     // const lessons = await Lesson.find({});
+    const teacher = await req.teacher
+      .populate({ path: "students" })
+      .execPopulate();
+
+    const lessons = await Promise.all(
+      teacher.students.map(async (stu) => {
+        const student = await stu.populate({ path: "lessons" }).execPopulate();
+
+        return { student, lessons: student.lessons };
+      })
+    );
+
     res.send(lessons);
   } catch (e) {
     res.status(500).send();
   }
 });
 
-app.get("/lessons:id", async (req, res) => {
+app.get("/lessons/:id", async (req, res) => {
   try {
     const lesson = await Lesson.findById(req.params.id);
 
     if (!lesson) res.status(404).send();
 
     res.send(lesson);
+  } catch (e) {
+    res.status(500).send();
+  }
+});
+
+app.patch("/lessons/:id", async (req, res) => {
+  try {
+    const lesson = await Lesson.findByIdAndUpdate(req.params.id, req.body);
+    if (lesson) {
+      res.send();
+    } else {
+      res.status(404).send();
+    }
   } catch (e) {
     res.status(500).send();
   }

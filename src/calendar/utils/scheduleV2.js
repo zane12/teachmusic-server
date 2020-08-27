@@ -14,7 +14,7 @@ async function addLessons(student, auth) {
   const instances = response.data.items;
   //instances contains each events google calendar data
   instances.forEach(async (event) => {
-    const lessonDate = moment(event.start.dateTime).format("MMDDYYYY");
+    const lessonDate = event.start.dateTime;
     const calendarId = event.id;
 
     const lesson = new Lesson({ lessonDate, student: student._id, calendarId });

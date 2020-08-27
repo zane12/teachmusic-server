@@ -2,10 +2,18 @@ const mongoose = require("mongoose");
 
 const Lesson = mongoose.model("Lesson", {
   lessonDate: {
-    type: String,
+    type: Date,
     required: true,
   },
   taught: {
+    type: Boolean,
+    default: false,
+  },
+  cancelled: {
+    type: Boolean,
+    default: false,
+  },
+  noShow: {
     type: Boolean,
     default: false,
   },
