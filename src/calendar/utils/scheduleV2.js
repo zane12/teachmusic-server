@@ -80,9 +80,16 @@ async function scheduleMonth(student, auth) {
   let lessonEnd = lessonDate;
   lessonEnd = moment(lessonDate).add(30, "m").toDate();
 
-  const monthEnd = new Date(lessonDate.getFullYear(), month + 1, 0);
+  let monthEnd = new Date(lessonDate.getFullYear(), month + 1, 0);
   monthEnd.setHours(23, 59, 0, 0);
 
+  const dateCheck = new Date();
+  dateCheck.setDate(25);
+  dateCheck.setHours(0, 0, 0, 0);
+
+  if (moment(lessonDate).isSameOrAfter(dateCheck)) {
+    monthEnd = moment(monthEnd).add(1, "month");
+  }
   const endRecurrence =
     moment(monthEnd).format("YYYYMMDD") +
     "T" +
@@ -270,6 +277,62 @@ const modifyLessons = async (student, auth) => {
   );
 };
 
+const rescheduleLesson = async (student, auth) => {
+  //student comes in with lessonToReschedule as mongoose ID, and newLessonDate as a Date object
+  const calendar = google.calendar({ version: "v3", auth });
+
+  const lessonToReschedule = await Lesson.findOne({
+    _id: student.lessonToReschedule,
+  });
+
+  const lesson = await calendar.events.get({
+    auth,
+    calendarId: "primary",
+    eventId: lessonToReschedule.calendarId,
+  });
+
+  lesson.data.start.dateTime = student.newLessonDate;
+  const endtime = moment(student.newLessonDate).add(30, "minutes");
+  lesson.data.end.dateTime = endtime.toISOString();
+
+  await calendar.events.update(
+    {
+      auth,
+      calendarId: "primary",
+      eventId: lessonToReschedule.calendarId,
+      resource: lesson.data,
+    },
+    (err, event) => {
+      if (err) {
+        console.log(err);
+      } else {
+      }
+    }
+  );
+};
+
+const removeLesson = async (student, auth) => {
+  //student comes in as object with lessonToRemove attached as a Mongoose ID
+  const calendar = google.calendar({ version: "v3", auth });
+
+  const lessonToRemove = await Lesson.findOne({ _id: student.lessonToRemove });
+
+  const lesson = await calendar.events.get({
+    auth,
+    calendarId: "primary",
+    eventId: lessonToRemove.calendarId,
+  });
+
+  lesson.data.status = "cancelled";
+
+  calendar.events.update({
+    auth,
+    calendarId: "primary",
+    eventId: lessonToRemove.calendarId,
+    resource: lesson.data,
+  });
+};
+
 const stopLessons = async (student, auth) => {
   //student comes in as an object with endLessonTime attached
   const endMoment = moment(student.endLessonTime.firstLesson);
@@ -331,6 +394,8 @@ module.exports = {
   modifyLessons,
   stopLessons,
   addLessons,
+  removeLesson,
   removeLessons,
   getCalendarName,
+  rescheduleLesson,
 };

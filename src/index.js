@@ -2,6 +2,7 @@ const express = require("express");
 require("./db/mongoose");
 
 const auth = require("./middleware/auth");
+const moment = require("moment");
 const {
   calendarAuthURL,
   authorizeCalendar,
@@ -11,11 +12,15 @@ const {
   modifyLessons,
   stopLessons,
   getCalendarName,
+  removeLesson,
+  rescheduleLesson,
 } = require("./calendar/utils/scheduleV2");
 
 const Teacher = require("./models/Teacher");
 const Student = require("./models/Student");
 const Lesson = require("./models/Lesson");
+
+const CronJob = require("cron").CronJob;
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -25,6 +30,34 @@ app.use(express.json());
 app.listen(port, () => {
   console.log("Server is up on port: " + port);
 });
+
+const job = new CronJob(
+  "0 0 25 * *",
+
+  async () => {
+    const students = await Student.find({});
+    students.map(async (student) => {
+      const teacher = await Teacher.findOne({ _id: student.teacherId });
+
+      const dayToFind = student.lessonTime.lessonDay;
+      let searchDate = moment(new Date());
+      searchDate = searchDate.add(1, "month").startOf("month");
+
+      while (searchDate.day() !== dayToFind) {
+        searchDate.add(1, "day");
+      }
+
+      student.lessonTime.firstLesson = searchDate.toDate();
+      //student.lessonTime.firstLesson = something
+
+      authorizeCalendar(teacher, student, scheduleMonth);
+    });
+  },
+  null,
+  true,
+  "America/Chicago"
+);
+job.start();
 
 app.post("/teacher", async (req, res) => {
   try {
@@ -235,10 +268,21 @@ app.get("/lessons/:id", async (req, res) => {
   }
 });
 
-app.patch("/lessons/:id", async (req, res) => {
+app.patch("/lessons/:id", auth, async (req, res) => {
   try {
     const lesson = await Lesson.findByIdAndUpdate(req.params.id, req.body);
+    const student = await Student.findById(lesson.student);
     if (lesson) {
+      if (req.body.cancelled) {
+        student.lessonToRemove = req.params.id;
+
+        authorizeCalendar(req.teacher, student, removeLesson);
+      }
+      if (req.body.lessonDate) {
+        student.lessonToReschedule = req.params.id;
+        student.newLessonDate = req.body.lessonDate;
+        authorizeCalendar(req.teacher, student, rescheduleLesson);
+      }
       res.send();
     } else {
       res.status(404).send();
