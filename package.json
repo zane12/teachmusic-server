@@ -20,6 +20,8 @@
     "nodemon": "^2.0.4"
   },
   "scripts": {
+    "start": "node src/index.js",
+    "dev-db": "..\\..\\..\\mongodb\\bin\\mongod --dbpath ../../../mongodb-data",
     "dev": "nodemon -r dotenv/config src/index.js dotenv_config_path=./config/dev.env",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -16,9 +16,9 @@ const teacherSchema = mongoose.Schema({
   email: {
     type: String,
     required: true,
-    unique: true,
     trim: true,
     lowercase: true,
+    unique: true,
     validate(value) {
       if (!validator.isEmail(value)) {
         throw new Error("not a valid email address");

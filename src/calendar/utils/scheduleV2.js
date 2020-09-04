@@ -90,6 +90,7 @@ async function scheduleMonth(student, auth) {
   if (moment(lessonDate).isSameOrAfter(dateCheck)) {
     monthEnd = moment(monthEnd).add(1, "month");
   }
+
   const endRecurrence =
     moment(monthEnd).format("YYYYMMDD") +
     "T" +
