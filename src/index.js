@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 require("./db/mongoose");
 
 const auth = require("./middleware/auth");
@@ -26,6 +27,7 @@ const app = express();
 const port = process.env.PORT || 8080;
 
 app.use(express.json());
+app.use(cors());
 
 app.listen(port, () => {
   console.log("Server is up on port: " + port);
@@ -296,7 +298,7 @@ app.get("/oauth", async (req, res) => {
   try {
     const calendarAuthCode = req.query.code;
 
-    res.redirect("http://localhost:3000?code=" + calendarAuthCode);
+    res.redirect(process.env.CLIENT_URL + "?code=" + calendarAuthCode);
   } catch (e) {
     res.status(500).send(e);
   }
