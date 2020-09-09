@@ -87,7 +87,6 @@ app.get("/teacher/:id/calendar", auth, async (req, res) => {
 
     res.send(JSON.stringify({ calendarName }));
   } catch (e) {
-    console.log(e);
     res.status(500).send(e);
   }
 });
