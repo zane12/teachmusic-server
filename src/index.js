@@ -120,12 +120,17 @@ app.post("/teacher/login", async (req, res) => {
     if (req.body.calendarAuthCode) {
       await Teacher.findByIdAndUpdate(teacher._id, {
         calendarAuthCode: req.body.calendarAuthCode,
+        authorized: req.body.authorized,
       });
     }
 
     const token = await teacher.generateAuthToken();
+    let data = { teacher, token };
+    if (!teacher.authorized) {
+      data.calendarAuthURL = calendarAuthURL;
+    }
 
-    res.send({ teacher, token });
+    res.send(data);
   } catch (e) {
     res.status(401).send(e);
   }

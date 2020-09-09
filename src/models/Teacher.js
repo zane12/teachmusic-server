@@ -21,7 +21,7 @@ const teacherSchema = mongoose.Schema({
     unique: true,
     validate(value) {
       if (!validator.isEmail(value)) {
-        throw new Error("not a valid email address");
+        throw new Error("Not a valid email address");
       }
     },
   },
@@ -32,8 +32,13 @@ const teacherSchema = mongoose.Schema({
     minlength: 7,
     validate(value) {
       if (value === value.toLowerCase() || value === value.toUpperCase())
-        throw new Error("password must include both upper and lower case");
+        throw new Error("Password must include both upper and lower case");
     },
+  },
+
+  authorized: {
+    type: Boolean,
+    default: false,
   },
 
   calendarAuthCode: {
