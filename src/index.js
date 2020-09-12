@@ -91,14 +91,40 @@ app.get("/teacher/:id/calendar", auth, async (req, res) => {
   }
 });
 
-app.patch("/teacher/:id", async (req, res) => {
+app.patch("/teacher/:id", auth, async (req, res) => {
   const _id = req.params.id;
   const body = req.body;
 
+  for (prop in body) {
+    if (body[prop] === "") {
+      delete body[prop];
+    }
+  }
+
   try {
-    const teacher = await Teacher.findByIdAndUpdate(_id, body);
+    const authorize = await Teacher.findOne({
+      email: body.email,
+      password: body.password,
+    });
+
+    const teacher = await Teacher.findById(req.params.id);
 
     if (!teacher) res.status(404).send();
+    if (!authorize) res.status(401).send();
+    if (authorize._id.equals(teacher._id)) {
+      if (body.newPassword && body.newPassword === body.confirmNewPassword) {
+        body.password = body.newPassword;
+        delete body.newPassword;
+        delete body.confirmNewPassword;
+      }
+
+      if (body.newEmail) {
+        body.email = body.newEmail;
+        delete body.newEmail;
+      }
+
+      await Teacher.findByIdAndUpdate(req.params.id, body);
+    }
 
     res.status(200).send();
   } catch (e) {
