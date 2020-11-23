@@ -7,7 +7,12 @@ const studentSchema = mongoose.Schema({
     required: true,
     trim: true,
   },
-  contactName: {
+  contactFirstName: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  contactLastName: {
     type: String,
     required: true,
     trim: true,
@@ -73,6 +78,17 @@ const studentSchema = mongoose.Schema({
   recurringEventId: {
     type: String,
   },
+  paymentURL: {
+    type: String,
+  },
+  braintreeId: {
+    type: String,
+  },
+  braintreeSubscriptionId: {
+    type: String,
+  }
+
+  
 });
 
 studentSchema.virtual("lessons", {
@@ -80,6 +96,7 @@ studentSchema.virtual("lessons", {
   localField: "_id",
   foreignField: "student",
 });
+
 
 const Student = mongoose.model("Student", studentSchema);
 

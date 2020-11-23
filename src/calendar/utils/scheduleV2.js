@@ -3,8 +3,20 @@ const moment = require("moment");
 const Student = require("../../models/Student");
 const Lesson = require("../../models/Lesson");
 const mongoose = require("mongoose");
+const braintree = require('braintree');
+
+const gateway = new braintree.BraintreeGateway({
+  environment: braintree.Environment.Sandbox,
+  merchantId: process.env.BRAINTREE_MERCHANT_ID,
+  publicKey: process.env.BRAINTREE_PUBLIC_KEY,
+  privateKey: process.env.BRAINTREE_PRIVATE_KEY
+});
 
 async function addLessons(student, auth) {
+
+  //count lessons for billing
+  let lessonCount = 0; 
+
   const calendar = google.calendar({ version: "v3", auth });
   const response = await calendar.events.instances({
     auth,
@@ -14,6 +26,8 @@ async function addLessons(student, auth) {
   const instances = response.data.items;
   //instances contains each events google calendar data
   instances.forEach(async (event) => {
+    lessonCount++;
+
     const lessonDate = event.start.dateTime;
     const calendarId = event.id;
 
@@ -21,6 +35,30 @@ async function addLessons(student, auth) {
 
     await lesson.save();
   });
+
+  const update = [{
+    amount: 30,
+    existingId: process.env.BRAINTREE_LESSON_ADDON,
+    neverExpires: true, 
+    quantity: lessonCount          
+  }]      
+
+  if(student.braintreeSubscriptionId) {
+    
+    gateway.subscription.find(student.braintreeSubscriptionId)
+      .then(result => {
+        
+
+        
+        gateway.subscription.update(student.braintreeSubscriptionId, {addOns: {update}}).then(result => {
+          console.log(result);
+        }).catch(e => console.log(e));
+
+      }).catch(e => console.log(e))
+    
+  } 
+  
+  
 }
 
 async function removeLessons(student, auth) {
@@ -39,6 +77,7 @@ async function removeLessons(student, auth) {
       console.log(e);
     });
   const instances = response.data.items;
+  
 
   //instances contains each events google calendar data
   if (instances.length > 0) {
@@ -47,8 +86,9 @@ async function removeLessons(student, auth) {
 
       const lesson = await Lesson.findOne({ calendarId });
 
-      if (lesson) {
+      if (lesson) {        
         if (!lesson.taught) {
+          
           await lesson.deleteOne();
         }
       }
@@ -56,6 +96,10 @@ async function removeLessons(student, auth) {
   } else {
     console.log("No lesson to remove");
   }
+
+  
+
+
 }
 
 async function scheduleMonth(student, auth) {
@@ -68,6 +112,7 @@ async function scheduleMonth(student, auth) {
   //   );
 
   const month = lessonDate.getMonth();
+  
 
   lessonDate.setHours(
     student.lessonTime.lessonHour,
@@ -87,9 +132,9 @@ async function scheduleMonth(student, auth) {
   dateCheck.setDate(25);
   dateCheck.setHours(0, 0, 0, 0);
 
-  if (moment(lessonDate).isSameOrAfter(dateCheck)) {
-    monthEnd = moment(monthEnd).add(1, "month");
-  }
+  if (moment(lessonDate).isSameOrAfter(dateCheck) && moment(lessonDate).month() === moment(dateCheck).month()) {
+   monthEnd = moment(monthEnd).add(1, "month");
+  }  
 
   const endRecurrence =
     moment(monthEnd).format("YYYYMMDD") +
@@ -97,6 +142,7 @@ async function scheduleMonth(student, auth) {
     moment(monthEnd).format("HHmmss") +
     "Z";
   //20110701T170000Z <-- formatted for Google Calendar api v3 recurrence
+  
 
   const calendarEvent = {
     summary: "Lesson",
@@ -332,6 +378,14 @@ const removeLesson = async (student, auth) => {
     eventId: lessonToRemove.calendarId,
     resource: lesson.data,
   });
+
+  gateway.subscription.update(student.braintreeId, {
+    discounts: {
+      add: [
+        {inheritedFromId: process.env.BRAINTREE_LESSON_CREDIT}
+      ]
+    }
+  })
 };
 
 const stopLessons = async (student, auth) => {
