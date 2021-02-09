@@ -31,7 +31,7 @@ app.use(cors());
 app.use(studentRoutes)
 app.use(teacherRoutes)
 app.use(lessonRoutes)
-app.use(paymentRoutes);
+//app.use(paymentRoutes);
 
 app.listen(port, () => {
   console.log("Server is up on port: " + port);
