@@ -5,7 +5,6 @@
   "main": "index.js",
   "dependencies": {
     "axios": "^0.19.2",
-    "braintree": "^3.0.0",
     "cors": "^2.8.5",
     "cron": "^1.8.2",
     "dotenv": "^8.2.0",

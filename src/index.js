@@ -4,7 +4,7 @@ require("./db/mongoose");
 const lessonRoutes = require("./routers/lessonRoutes")
 const studentRoutes = require("./routers/studentRoutes")
 const teacherRoutes = require("./routers/teacherRoutes")
-const paymentRoutes = require("./routers/paymentRoutes")
+//const paymentRoutes = require("./routers/paymentRoutes")
 
 
 const moment = require("moment");
