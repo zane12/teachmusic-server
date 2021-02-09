@@ -3,14 +3,14 @@ const moment = require("moment");
 const Student = require("../../models/Student");
 const Lesson = require("../../models/Lesson");
 const mongoose = require("mongoose");
-const braintree = require('braintree');
+// const braintree = require('braintree');
 
-const gateway = new braintree.BraintreeGateway({
-  environment: braintree.Environment.Sandbox,
-  merchantId: process.env.BRAINTREE_MERCHANT_ID,
-  publicKey: process.env.BRAINTREE_PUBLIC_KEY,
-  privateKey: process.env.BRAINTREE_PRIVATE_KEY
-});
+// const gateway = new braintree.BraintreeGateway({
+//   environment: braintree.Environment.Sandbox,
+//   merchantId: process.env.BRAINTREE_MERCHANT_ID,
+//   publicKey: process.env.BRAINTREE_PUBLIC_KEY,
+//   privateKey: process.env.BRAINTREE_PRIVATE_KEY
+// });
 
 async function addLessons(student, auth) {
 
@@ -36,27 +36,27 @@ async function addLessons(student, auth) {
     await lesson.save();
   });
 
-  const update = [{
-    amount: 30,
-    existingId: process.env.BRAINTREE_LESSON_ADDON,
-    neverExpires: true, 
-    quantity: lessonCount          
-  }]      
+  // const update = [{
+  //   amount: 30,
+  //   existingId: process.env.BRAINTREE_LESSON_ADDON,
+  //   neverExpires: true, 
+  //   quantity: lessonCount          
+  // }]      
 
-  if(student.braintreeSubscriptionId) {
+  // if(student.braintreeSubscriptionId) {
     
-    gateway.subscription.find(student.braintreeSubscriptionId)
-      .then(result => {
+  //   gateway.subscription.find(student.braintreeSubscriptionId)
+  //     .then(result => {
         
 
         
-        gateway.subscription.update(student.braintreeSubscriptionId, {addOns: {update}}).then(result => {
-          console.log(result);
-        }).catch(e => console.log(e));
+  //       gateway.subscription.update(student.braintreeSubscriptionId, {addOns: {update}}).then(result => {
+  //         console.log(result);
+  //       }).catch(e => console.log(e));
 
-      }).catch(e => console.log(e))
+  //     }).catch(e => console.log(e))
     
-  } 
+  // } 
   
   
 }
@@ -379,13 +379,13 @@ const removeLesson = async (student, auth) => {
     resource: lesson.data,
   });
 
-  gateway.subscription.update(student.braintreeId, {
-    discounts: {
-      add: [
-        {inheritedFromId: process.env.BRAINTREE_LESSON_CREDIT}
-      ]
-    }
-  })
+  // gateway.subscription.update(student.braintreeId, {
+  //   discounts: {
+  //     add: [
+  //       {inheritedFromId: process.env.BRAINTREE_LESSON_CREDIT}
+  //     ]
+  //   }
+  // })
 };
 
 const stopLessons = async (student, auth) => {
