@@ -23,7 +23,9 @@ const getCalendarToken = (teacher, student, callback) => {
 
   oAuth2Client.getToken(code, async (err, token) => {
     if (err) {
-      return console.log(err);
+      return console.log("client id: " + process.env.GOOGLE_CLIENTID,
+        "client secret: " + process.env.GOOGLE_CLIENT_SECRET,
+        "redirect url: " + process.env.GOOGLE_REDIRECT_URL);
     }
 
     oAuth2Client.setCredentials(token);

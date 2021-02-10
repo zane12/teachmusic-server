@@ -33,8 +33,6 @@ app.use(teacherRoutes)
 app.use(lessonRoutes)
 //app.use(paymentRoutes);
 
-//added this to update heroku pls delete
-
 app.listen(port, () => {
   console.log("Server is up on port: " + port);
 });
