@@ -1,3 +1,4 @@
+require("../src/db/mongoose");
 
 const Student = require("../src/models/Student");
 const Teacher = require("../src/models/Teacher");
