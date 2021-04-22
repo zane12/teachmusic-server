@@ -12,6 +12,7 @@ async function update() {
     const students = await Student.find({});
     console.log(students);
     students.map(async (student) => {
+      if(student.stopped) continue;
       const teacher = await Teacher.findOne({ _id: student.teacherId });
       
       const dayToFind = student.lessonTime.lessonDay;
